@@ -1,0 +1,16 @@
+# Install on macOS
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+eval "$(/opt/homebrew/bin/brew shellenv)"
+brew tap mongodb/brew
+brew install mongodb-community
+brew services start mongodb/brew/mongodb-community
+mongosh
+
+# Use in terminal:
+mongosh
+mongosh "mongodb://hostname:port"
+use RetrivalDB
+db.wiki_data.find({Topic: /some keyword/i})
+db.wiki_data.find({ Summary: { $regex: "ADHD" } })
+exit
