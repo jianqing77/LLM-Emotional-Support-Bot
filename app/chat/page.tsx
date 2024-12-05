@@ -5,9 +5,10 @@ import Link from 'next/link';
 import logoIconImg from '@/public/logo-icon.svg';
 import { useState, useEffect } from 'react';
 import { PlaceholdersAndVanishInput } from '@/components/ui/placeholders-and-vanish-input';
+import { v4 as uuidv4 } from 'uuid';
 
 interface Message {
-    id: number;
+    id: string;
     text: string;
     sender: 'user' | 'bot';
 }
@@ -16,6 +17,13 @@ export default function Chat() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputValue, setInputValue] = useState('');
     const [hasSentMessage, setHasSentMessage] = useState(false);
+
+    // state variables to track question
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [followUpQuestions, setFollowUpQuestions] = useState<string[]>([]);
+
+    // Array to store user responses for the follow up questions
+    const [userFollowupResponse, setUserFollowupResponse] = useState<string[]>([]);
 
     const placeholders = [
         "Can you help me understand why I've been so sad?",
@@ -29,46 +37,74 @@ export default function Chat() {
         setInputValue(e.target.value);
     };
 
+    /**
+     * Handles the sending of user messages. It updates the messages state to include
+     * the new user message, decides whether to call getBotResponse or processFollowupUserResponse
+     * based on the message history, and resets the input field.
+     */
     const handleSend = () => {
         const newMessage: Message = {
-            id: messages.length,
+            id: uuidv4(), // UUID as ID
             text: inputValue,
             sender: 'user',
         };
-        setMessages([...messages, newMessage]);
-        getBotResponse(inputValue);
+        setMessages((prev) => [...prev, newMessage]);
+        // Decide when to call getBotFollowupResponse
+        if (messages.length === 0) {
+            // If it's the first message, get the bot response for all the follow up questions
+            getBotFollowupQuestions(inputValue);
+        } else {
+            // If it's not the first message, get the next follow up question
+            processFollowupUserResponse(inputValue); // Handle subsequent messages
+        }
         setInputValue(''); // clear the input after sending
         setHasSentMessage(true);
     };
 
-    // const getBotResponse = async (userInput: string) => {
-    //     try {
-    //         const response = await fetch('/api/generate', {
-    //             method: 'POST',
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //             },
-    //             body: JSON.stringify({ query: userInput }),
-    //         });
+    /**
+     * Processes user inputs after the initial interaction. It sends a bot message based
+     * on the current index of follow-up questions, updates the index, and stores user responses.
+     * @param userInput - The text input from the user.
+     */
+    const processFollowupUserResponse = (userInput: string) => {
+        if (currentQuestionIndex < followUpQuestions.length) {
+            sendBotMessage(followUpQuestions[currentQuestionIndex]);
+            setCurrentQuestionIndex((current) => current + 1);
+        } else {
+            // TODO: after the followUpQuestions were done, we should process to the next step
+            sendBotMessage('Thank you for your responses.');
+        }
+        // Store user response about the follow up questions -- append to the list
+        setUserFollowupResponse((prev) => [...prev, userInput]);
+    };
 
-    //         if (!response.ok) {
-    //             throw new Error('Network response was not ok');
-    //         }
+    // Testing userFollowupResponse for the follow up questions
+    useEffect(() => {
+        console.log(
+            'Updated user responses for follow-up questions:',
+            userFollowupResponse
+        );
+    }, [userFollowupResponse]);
 
-    //         const data = await response.json();
-    //         const botMessage: Message = {
-    //             id: messages.length + 1,
-    //             text: data.followup, // 'followup' is the key in the JSON response
-    //             sender: 'bot',
-    //         };
+    /**
+     * Sends a message from the bot by updating the messages state with a new bot message.
+     * @param text - The message text to be sent by the bot.
+     */
+    const sendBotMessage = (text: string) => {
+        const botMessage: Message = {
+            id: uuidv4(), // use UUID as ID to ensure uniqueness
+            text: text,
+            sender: 'bot',
+        };
+        setMessages((prev) => [...prev, botMessage]);
+    };
 
-    //         setMessages((prevMessages) => [...prevMessages, botMessage]);
-    //     } catch (error) {
-    //         console.error('There was a problem with the fetch operation:', error);
-    //     }
-    // };
-
-    const getBotResponse = async (userInput: string) => {
+    /**
+     * Fetches a bot response from a server API based on the user's input.
+     * Handles network responses, updates follow-up questions, and sends initial follow-up messages if available.
+     * @param userInput - The user's input text used to query the API.
+     */
+    const getBotFollowupQuestions = async (userInput: string) => {
         try {
             const response = await fetch('/api/generate', {
                 method: 'POST',
@@ -84,26 +120,12 @@ export default function Chat() {
 
             const data = await response.json();
             if (data.followup && data.followup.length) {
-                // Process each follow-up question individually
-                data.followup.forEach((question: string, index: number) => {
-                    const botMessage: Message = {
-                        id: messages.length + 1 + index, // Ensure unique ID
-                        text: question,
-                        sender: 'bot',
-                    };
-
-                    setTimeout(() => {
-                        setMessages((prevMessages) => [...prevMessages, botMessage]);
-                    }, 1000 * index); // Delay subsequent messages to simulate typing
-                });
+                setFollowUpQuestions(data.followup);
+                setCurrentQuestionIndex(0);
+                sendBotMessage(data.followup[0]); // Send the first follow-up question
+                setCurrentQuestionIndex(1); // Prepare index for the next question
             } else {
-                // Handle the case where there are no follow-up questions
-                const botMessage: Message = {
-                    id: messages.length + 1,
-                    text: 'No follow-up questions available.',
-                    sender: 'bot',
-                };
-                setMessages((prevMessages) => [...prevMessages, botMessage]);
+                sendBotMessage('No follow-up questions available.');
             }
         } catch (error) {
             console.error('There was a problem with the fetch operation:', error);
