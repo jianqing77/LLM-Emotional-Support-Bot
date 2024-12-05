@@ -41,6 +41,33 @@ export default function Chat() {
         setHasSentMessage(true);
     };
 
+    // const getBotResponse = async (userInput: string) => {
+    //     try {
+    //         const response = await fetch('/api/generate', {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //             },
+    //             body: JSON.stringify({ query: userInput }),
+    //         });
+
+    //         if (!response.ok) {
+    //             throw new Error('Network response was not ok');
+    //         }
+
+    //         const data = await response.json();
+    //         const botMessage: Message = {
+    //             id: messages.length + 1,
+    //             text: data.followup, // 'followup' is the key in the JSON response
+    //             sender: 'bot',
+    //         };
+
+    //         setMessages((prevMessages) => [...prevMessages, botMessage]);
+    //     } catch (error) {
+    //         console.error('There was a problem with the fetch operation:', error);
+    //     }
+    // };
+
     const getBotResponse = async (userInput: string) => {
         try {
             const response = await fetch('/api/generate', {
@@ -56,13 +83,28 @@ export default function Chat() {
             }
 
             const data = await response.json();
-            const botMessage: Message = {
-                id: messages.length + 1,
-                text: data.followup, // 'followup' is the key in the JSON response
-                sender: 'bot',
-            };
+            if (data.followup && data.followup.length) {
+                // Process each follow-up question individually
+                data.followup.forEach((question: string, index: number) => {
+                    const botMessage: Message = {
+                        id: messages.length + 1 + index, // Ensure unique ID
+                        text: question,
+                        sender: 'bot',
+                    };
 
-            setMessages((prevMessages) => [...prevMessages, botMessage]);
+                    setTimeout(() => {
+                        setMessages((prevMessages) => [...prevMessages, botMessage]);
+                    }, 1000 * index); // Delay subsequent messages to simulate typing
+                });
+            } else {
+                // Handle the case where there are no follow-up questions
+                const botMessage: Message = {
+                    id: messages.length + 1,
+                    text: 'No follow-up questions available.',
+                    sender: 'bot',
+                };
+                setMessages((prevMessages) => [...prevMessages, botMessage]);
+            }
         } catch (error) {
             console.error('There was a problem with the fetch operation:', error);
         }

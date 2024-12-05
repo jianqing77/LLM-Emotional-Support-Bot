@@ -47,6 +47,7 @@ def followup_agent(input_text, candidates):
                         "You are an independent diagnostic assistant based on DSM-5 principles. "
                         "Your role is to ask clear, concise, and distinguishable follow-up questions "
                         "that help refine the selection of the most relevant psychological answer. "
+                        "Hard Limit the questions to five questions. Each question should be ended with a question mark, and no question mark within the questions "
                         "Avoid making references to the purpose of the questions or comparisons with other disorders."
                     ),
                 },
@@ -61,7 +62,12 @@ def followup_agent(input_text, candidates):
 
         # Extract the assistant's message from the response
         followup_questions = response["choices"][0]["message"]["content"]
-        return followup_questions
+        # Splitting the block of text into individual questions
+        questions = followup_questions.split("?")
+        print("questions: ", questions)
+        parsed_questions = [q.strip() + "?" for q in questions if q.strip()]
+        print(parsed_questions)
+        return parsed_questions
 
     except Exception as e:
         return f"An error occurred: {e}"

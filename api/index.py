@@ -22,12 +22,10 @@ def generate_followup():
 
     user_input = request.json["query"]
 
-    print("User input: " + user_input)
-
     # Generate candidates
     candidates = Query.generate_candidate(user_input, 5)
 
-    # Generate followup
+    # Return a list of questions
     followup = followup_agent(user_input, candidates)
 
     return jsonify({"followup": followup})
