@@ -13,8 +13,24 @@ interface Message {
     sender: 'user' | 'bot';
 }
 
+// const payload = {
+//     initialQuery: initialQuery,
+//     candidates: candidates,
+//     followUpQuestions: followUpQuestions,
+//     userFollowupResponse: userFollowupResponse,
+// };
+interface finalDiagnosisPayload {
+    initialQuery: string;
+    candidates: { [key: string]: string };
+    followUpQuestions: string[];
+    userFollowupResponse: string[];
+}
+
 export default function Chat() {
     const [messages, setMessages] = useState<Message[]>([]);
+    const [initialQuery, setInitialQuery] = useState('');
+    const [candidates, setCandidates] = useState({});
+
     const [inputValue, setInputValue] = useState('');
     const [hasSentMessage, setHasSentMessage] = useState(false);
 
@@ -73,6 +89,13 @@ export default function Chat() {
         } else {
             // TODO: after the followUpQuestions were done, we should process to the next step
             sendBotMessage('Thank you for your responses.');
+            const payload: finalDiagnosisPayload = {
+                initialQuery: initialQuery,
+                candidates: candidates,
+                followUpQuestions: followUpQuestions,
+                userFollowupResponse: userFollowupResponse,
+            };
+            getBotFinalDiagnosis(payload);
         }
         // Store user response about the follow up questions -- append to the list
         setUserFollowupResponse((prev) => [...prev, userInput]);
@@ -80,11 +103,14 @@ export default function Chat() {
 
     // Testing userFollowupResponse for the follow up questions
     useEffect(() => {
+        console.log('Updated initial query:', initialQuery);
+        console.log('Updated candidates:', candidates);
+        console.log('Updated follow up questions:', followUpQuestions);
         console.log(
             'Updated user responses for follow-up questions:',
             userFollowupResponse
         );
-    }, [userFollowupResponse]);
+    }, [candidates, initialQuery, followUpQuestions, userFollowupResponse]);
 
     /**
      * Sends a message from the bot by updating the messages state with a new bot message.
@@ -119,16 +145,50 @@ export default function Chat() {
             }
 
             const data = await response.json();
-            if (data.followup && data.followup.length) {
-                setFollowUpQuestions(data.followup);
+            if (data.followupQuestions && data.followupQuestions.length) {
+                setInitialQuery(data.initialQuery);
+                setCandidates(data.candidates);
+                setFollowUpQuestions(data.followupQuestions);
                 setCurrentQuestionIndex(0);
-                sendBotMessage(data.followup[0]); // Send the first follow-up question
+                sendBotMessage(data.followupQuestions[0]); // Send the first follow-up question
                 setCurrentQuestionIndex(1); // Prepare index for the next question
             } else {
                 sendBotMessage('No follow-up questions available.');
             }
         } catch (error) {
             console.error('There was a problem with the fetch operation:', error);
+        }
+    };
+
+    const getBotFinalDiagnosis = async (payload: finalDiagnosisPayload) => {
+        console.log('****** getBotFinalDiagnosis was called in page.tsx');
+        console.log(
+            '====== Payload in func getBotFinalDiagnosis: ' + JSON.stringify(payload)
+        );
+
+        try {
+            const response = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const data = await response.json();
+            // const agent = data.agent;
+            // const diagnosis = data.diagnosis;
+            // console.log('!!!!!!Success:', JSON.stringify(data));
+            const result = data.result;
+            sendBotMessage(result);
+            sendBotMessage('We have processed your responses. Thank you!');
+        } catch (error) {
+            console.error('Error:', error);
+            sendBotMessage('There was a problem processing your responses.');
         }
     };
 

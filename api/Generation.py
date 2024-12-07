@@ -24,12 +24,16 @@ def normalize_diagnosis(diagnosis):
 def followup_agent(input_text, candidates):
     try:
         # Construct the dynamic prompt
+        # candidate_list = "\n".join(
+        #     [f"- {topic}: {summary}" for topic, summary in candidates.items()]
+        # )
         candidate_list = "\n".join(
-            [f"- {topic}: {summary}" for topic, summary in candidates.items()]
+            [f"- {topic}: {summary[:50]}" for topic, summary in candidates.items()]
         )
+
         prompt = (
-            f"User input:\n{input_text}\n\n"
-            f"Candidates:\n{candidate_list}\n\n"
+            f"User input:{input_text}\n"
+            f"Candidates:\n{candidate_list}\n"
             "Based on the input and candidates, generate clear, concise, and "
             "distinguishable follow-up questions that help refine the selection of the most relevant candidate. "
             "Focus on clinical relevance, behavioral patterns, environmental factors, and distinguishing details. "
@@ -62,11 +66,18 @@ def followup_agent(input_text, candidates):
 
         # Extract the assistant's message from the response
         followup_questions = response["choices"][0]["message"]["content"]
+
+        # Check token usage
+        # token_usage = response["usage"]["total_tokens"]
+        # print(
+        #     f"************** 1->Total tokens used in function followup_agent: {token_usage}"
+        # )
+
         # Splitting the block of text into individual questions
         questions = followup_questions.split("?")
-        print("questions: ", questions)
+        # print("questions: ", questions)
         parsed_questions = [q.strip() + "?" for q in questions if q.strip()]
-        print(parsed_questions)
+        # print(parsed_questions)
         return parsed_questions
 
     except Exception as e:
@@ -81,7 +92,7 @@ def diagnostic_agent(formatted_documents, initial_inputs, formatted_followup, mo
             "for the individual in descending order of likelihood. Do not include reasoning. "
             "Provide the diagnoses as a simple list, and assign a likelihood score of 5 (most likely) to 1 (least likely).\n\n"
             f"Initial Inputs:\n{initial_inputs}\n\n"
-            f"Relevant Documents:\n{formatted_documents}\n\n"
+            f"Relevant Documents:\n{formatted_documents}\n"
             f"Follow-Up Questions and Answers:\n{formatted_followup}\n\n"
             "Return the diagnoses and their likelihood scores in this format:\n"
             "Diagnoses: <diag1>, <diag2>, <diag3>, <diag4>, <diag5>\n"
@@ -109,6 +120,12 @@ def diagnostic_agent(formatted_documents, initial_inputs, formatted_followup, mo
 
         # Extract raw response text
         response_text = response["choices"][0]["message"]["content"]
+
+        # Check token usage
+        # token_usage = response["usage"]["total_tokens"]
+        # print(
+        #     f"************** 2->Total tokens used in function diagnostic_agent: {token_usage}"
+        # )
 
         # Parse the response into diagnoses and likelihoods
         diagnoses = []
@@ -215,10 +232,10 @@ def final_agent(
 
     # Format documents and follow-up into strings for context
     formatted_documents = "\n".join(
-        [f"- {topic}: {summary}" for topic, summary in documents.items()]
+        [f"-{topic}: {summary}" for topic, summary in documents.items()]
     )
     formatted_followup = (
-        f"Follow-Up Questions:\n{followupQ}\n\nFollow-Up Answers:\n{followupA}"
+        f"Follow-Up Questions: {followupQ}\nFollow-Up Answers:\n{followupA}"
     )
 
     # Initialize conversation history with full context
@@ -234,21 +251,21 @@ def final_agent(
             "role": "assistant",
             "content": (
                 f"Hello, I'm MemeMinds, your meme mental health assistant. Based on the information provided, the suggested diagnosis is '{selected_diagnosis}'. "
-                "Let me explain why this diagnosis was considered. Afterward, I’ll share actionable suggestions and ask any questions that can help us understand more."
+                "Let me explain why this diagnosis was chosen. Afterward, I’ll share suggestions and ask any questions that can help us understand more."
             ),
         },
         {
             "role": "user",
             "content": (
                 f"Context:\n"
-                f"Initial Inputs: {initial_inputs}\n\n"
-                f"Relevant Documents:\n{formatted_documents}\n\n"
+                f"Initial Inputs: {initial_inputs}\n"
+                # f"Relevant Documents: {formatted_documents}\n"
                 f"{formatted_followup}"
             ),
         },
     ]
 
-    print("\n--- Diagnostic Chat with MemeMinds ---")
+    # print("\n--- Diagnostic Chat with MemeMinds ---")
     print("Type 'exit' or 'quit' to end the conversation.\n")
 
     # Start chat loop
@@ -258,7 +275,7 @@ def final_agent(
             model=selected_agent,
             messages=conversation_history,
             temperature=0.7,
-            max_tokens=700,
+            max_tokens=400,
             top_p=1.0,
             frequency_penalty=0.5,
             presence_penalty=0.0,
@@ -266,21 +283,27 @@ def final_agent(
 
         # Extract and display the assistant's response
         agent_response = response["choices"][0]["message"]["content"]
-        print(f"MemeMinds: {agent_response}")
+        # print(f"MemeMinds in function final_agent: {agent_response}")
+        return agent_response
+        # check token usage
+        # token_usage = response["usage"]["total_tokens"]
+        # print(
+        #     f"************** 3->Total tokens used in function final_agent: {token_usage}"
+        # )
 
         # Ask for user input
-        user_input = input("You: ").strip()
+        # user_input = input("You: ").strip()
 
         # Exit condition
-        if user_input.lower() in ["exit", "quit"]:
-            print("Exiting the diagnostic conversation with MemeMinds. Goodbye!")
-            break
+        # if user_input.lower() in ["exit", "quit"]:
+        #     print("Exiting the diagnostic conversation with MemeMinds. Goodbye!")
+        #     break
 
         # Append user input to the conversation history
-        conversation_history.append({"role": "user", "content": user_input})
+        # conversation_history.append({"role": "user", "content": user_input})
 
         # Append assistant's response to the conversation history
-        conversation_history.append({"role": "assistant", "content": agent_response})
+        # conversation_history.append({"role": "assistant", "content": agent_response})
 
 
 def select_agent(vote_df):
