@@ -90,10 +90,6 @@ export default function Chat() {
             sendBotMessage(followUpQuestions[currentQuestionIndex]);
             setCurrentQuestionIndex((current) => current + 1);
         } else {
-            // TODO: after the followUpQuestions were done, we should process to the next step
-            // sendBotMessage(
-            //     "Thank you for your responses! We're working on your diagnosis..."
-            // );
             const payload: finalDiagnosisPayload = {
                 initialQuery: initialQuery,
                 candidates: candidates,
@@ -182,11 +178,7 @@ export default function Chat() {
             }
 
             const data = await response.json();
-            // const agent = data.agent;
-            // const diagnosis = data.diagnosis;
             const result = data.result;
-            // console.log('!!!!!!Success:', JSON.stringify(result));
-
             sendBotMessage(result);
         } catch (error) {
             console.error('Error:', error);
@@ -197,7 +189,16 @@ export default function Chat() {
     };
 
     return (
-        <div className="h-[40rem] flex flex-col justify-center items-center px-4">
+        <div className="h-[50rem] flex flex-col justify-center items-center px-4">
+            <div className="w-full flex justify-end pt-6 pe-6">
+                <Link href="/">
+                    <button
+                        type="submit"
+                        className="rounded-md bg-background px-4 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                        Exit
+                    </button>
+                </Link>
+            </div>
             {!hasSentMessage && (
                 <div className="w-1/2 flex flex-col items-center justify-center flex-grow mt-16 sm:ms-10 text-center">
                     <Image
@@ -208,39 +209,18 @@ export default function Chat() {
                     <div className="mt-7">
                         Whether you're feeling joyful and want to share your happiness, or
                         you're struggling with sadness, anxiety, or stress,{' '}
-                        <span className="text-green-500 font-semibold">
-                            EmotionListener
-                        </span>{' '}
-                        is here to provide a safe, private space for you to express your
+                        <span className="text-green-500 font-semibold">MemeMinds</span> is
+                        here to provide a safe, private space for you to express your
                         feelings and thoughts. Our AI is designed with empathy at its
                         core, ensuring that you feel heard and understood. Let's talk
                         about what's on your mind today.
                     </div>
+                    <p className="text-center text-sm text-slate-400 mb-4 mt-5">
+                        If you need professional advice, please consult a doctor.
+                    </p>
                 </div>
             )}
-            {/* <div className="flex-1 overflow-auto p-4 w-1/2">
-                {messages.map((message) => (
-                    <div
-                        key={message.id}
-                        className={`flex mt-11 my-2 rounded-xl mb-7 ${
-                            message.sender === 'user'
-                                ? 'text-popup flex justify-end items-start'
-                                : 'px-4 py-3 bg-zinc-800 text-white flex justify-start items-start w-[90%]'
-                        }  w-full`}>
-                        <div
-                            className={`${
-                                message.sender === 'user'
-                                    ? 'border border-gray-500 rounded-xl px-4 py-3'
-                                    : ''
-                            } inline-block`}>
-                            <Markdown remarkPlugins={[remarkGfm]}>
-                                {message.text}
-                            </Markdown>
-                        </div>
-                    </div>
-                ))}
-            </div> */}
-            <div className="flex-1 overflow-auto p-4 w-1/2">
+            <div className="flex-1 overflow-auto p-4 w-1/2 scrollbar-thumb-rounded-full scrollbar scrollbar-thumb-slate-700 scrollbar-track-slate-600">
                 {messages.map((message) => (
                     <div
                         key={message.id}
@@ -266,7 +246,7 @@ export default function Chat() {
                                 className={`${
                                     message.sender === 'user'
                                         ? 'text-popup border border-gray-500 rounded-xl px-4 py-3'
-                                        : 'bg-zinc-800 text-white px-4 py-3 rounded-xl w-[90%]'
+                                        : 'bg-zinc-800 text-white px-4 py-3 rounded-xl w-[95%]'
                                 } inline-block`}>
                                 {/* Assuming Markdown component is correctly configured */}
                                 <Markdown remarkPlugins={[remarkGfm]}>

@@ -51,7 +51,7 @@ const Home = () => {
                     alt="Logo"
                     className="w-10 h-auto md:w-20 mb-2"
                 />
-                <Image src={logoImg} alt="Logo" className="w-24 h-auto md:w-32 mb-2 " />
+                <Image src={logoImg} alt="Logo" className="w-48 h-auto md:w-52 mb-2 " />
                 {/* Typewriter Effect -- Slogan */}
                 <div className="flex justify-center items-center w-full">
                     <TypewriterEffectSmooth words={words} />
