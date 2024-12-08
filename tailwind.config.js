@@ -1,7 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 import flowbite from 'flowbite-react/tailwind';
 import forms from '@tailwindcss/forms';
-
 module.exports = {
     content: [
         './pages/**/*.{js,ts,jsx,tsx,mdx}',
@@ -25,5 +24,5 @@ module.exports = {
             },
         },
     },
-    plugins: [flowbite.plugin(), forms],
+    plugins: [flowbite.plugin(), forms, require('tailwind-scrollbar')],
 };

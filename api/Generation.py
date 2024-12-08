@@ -12,7 +12,6 @@ random.seed(7180)
 OPEN_AI_API_KEY = os.getenv("OPEN_AI_API_KEY")
 openai.api_key = OPEN_AI_API_KEY
 
-
 model = "text-embedding-ada-002"
 
 
@@ -244,7 +243,10 @@ def final_agent(
             "role": "system",
             "content": (
                 "You are 'MemeMinds,' a DSM-5 diagnostic assistant. Your role is to first provide reasoning for the diagnosis you selected, "
-                "and briefly describe the disorder, offer actionable suggestions for improvement, and ask clarifying questions to refine understanding. Engage in a humor and supportive and conversational tone."
+                # "and briefly describe the disorder, offer actionable suggestions for improvement, and ask clarifying questions to refine understanding. "
+                "and briefly describe the disorder, offer actionable suggestions for improvement. "
+                "Please provide the response in markdown format which could be used in react-markdown and remarkGfm "
+                "Engage in a humor and supportive and conversational tone and no other extra information in the response."
             ),
         },
         {
@@ -275,7 +277,7 @@ def final_agent(
             model=selected_agent,
             messages=conversation_history,
             temperature=0.7,
-            max_tokens=400,
+            max_tokens=700,
             top_p=1.0,
             frequency_penalty=0.5,
             presence_penalty=0.0,
@@ -283,7 +285,7 @@ def final_agent(
 
         # Extract and display the assistant's response
         agent_response = response["choices"][0]["message"]["content"]
-        # print(f"MemeMinds in function final_agent: {agent_response}")
+        print(f"MemeMinds in function final_agent: {agent_response}")
         return agent_response
         # check token usage
         # token_usage = response["usage"]["total_tokens"]

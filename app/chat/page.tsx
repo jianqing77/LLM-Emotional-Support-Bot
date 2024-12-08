@@ -1,5 +1,9 @@
 'use client';
 
+import React from 'react';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm'; // if you need support for GitHub Flavored Markdown
+
 import Image from 'next/image';
 import Link from 'next/link';
 import logoIconImg from '@/public/logo-icon.svg';
@@ -13,12 +17,6 @@ interface Message {
     sender: 'user' | 'bot';
 }
 
-// const payload = {
-//     initialQuery: initialQuery,
-//     candidates: candidates,
-//     followUpQuestions: followUpQuestions,
-//     userFollowupResponse: userFollowupResponse,
-// };
 interface finalDiagnosisPayload {
     initialQuery: string;
     candidates: { [key: string]: string };
@@ -37,6 +35,9 @@ export default function Chat() {
     // state variables to track question
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [followUpQuestions, setFollowUpQuestions] = useState<string[]>([]);
+
+    // set state for loading spinner
+    const [loading, setLoading] = useState(false);
 
     // Array to store user responses for the follow up questions
     const [userFollowupResponse, setUserFollowupResponse] = useState<string[]>([]);
@@ -88,7 +89,9 @@ export default function Chat() {
             setCurrentQuestionIndex((current) => current + 1);
         } else {
             // TODO: after the followUpQuestions were done, we should process to the next step
-            sendBotMessage('Thank you for your responses.');
+            // sendBotMessage(
+            //     "Thank you for your responses! We're working on your diagnosis..."
+            // );
             const payload: finalDiagnosisPayload = {
                 initialQuery: initialQuery,
                 candidates: candidates,
@@ -161,10 +164,7 @@ export default function Chat() {
     };
 
     const getBotFinalDiagnosis = async (payload: finalDiagnosisPayload) => {
-        console.log('****** getBotFinalDiagnosis was called in page.tsx');
-        console.log(
-            '====== Payload in func getBotFinalDiagnosis: ' + JSON.stringify(payload)
-        );
+        setLoading(true);
 
         try {
             const response = await fetch('/api/analyze', {
@@ -182,13 +182,15 @@ export default function Chat() {
             const data = await response.json();
             // const agent = data.agent;
             // const diagnosis = data.diagnosis;
-            // console.log('!!!!!!Success:', JSON.stringify(data));
             const result = data.result;
+            console.log('!!!!!!Success:', JSON.stringify(result));
+
             sendBotMessage(result);
-            sendBotMessage('We have processed your responses. Thank you!');
         } catch (error) {
             console.error('Error:', error);
             sendBotMessage('There was a problem processing your responses.');
+        } finally {
+            setLoading(false); // Hide spinner
         }
     };
 
@@ -214,17 +216,25 @@ export default function Chat() {
                     </div>
                 </div>
             )}
-            <div className="w-1/2 flex-1 overflow-auto p-4">
-                {/* Messages */}
+            <div className="flex-1 overflow-auto p-4 w-1/2">
                 {messages.map((message) => (
                     <div
                         key={message.id}
-                        className={`mt-11 px-4 py-3 my-2 rounded-xl mb-7 ${
+                        className={`flex mt-11 my-2 rounded-xl mb-7 ${
                             message.sender === 'user'
-                                ? 'text-popup flex justify-end border border-gray-400 '
-                                : 'bg-zinc-800 text-white'
-                        }`}>
-                        {message.text}
+                                ? 'text-popup flex justify-end items-start'
+                                : 'px-4 py-3 bg-zinc-800 text-white flex justify-start items-start w-[90%]'
+                        }  w-full`}>
+                        <div
+                            className={`${
+                                message.sender === 'user'
+                                    ? 'border border-gray-500 rounded-xl px-4 py-3'
+                                    : ''
+                            } inline-block`}>
+                            <Markdown remarkPlugins={[remarkGfm]}>
+                                {message.text}
+                            </Markdown>
+                        </div>
                     </div>
                 ))}
             </div>
