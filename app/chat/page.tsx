@@ -5,6 +5,8 @@ import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm'; // if you need support for GitHub Flavored Markdown
 
 import Image from 'next/image';
+import botImg from '@/./public/bot.jpg';
+import userImg from '@/./public/user.jpg';
 import Link from 'next/link';
 import logoIconImg from '@/public/logo-icon.svg';
 import { useState, useEffect } from 'react';
@@ -183,7 +185,7 @@ export default function Chat() {
             // const agent = data.agent;
             // const diagnosis = data.diagnosis;
             const result = data.result;
-            console.log('!!!!!!Success:', JSON.stringify(result));
+            // console.log('!!!!!!Success:', JSON.stringify(result));
 
             sendBotMessage(result);
         } catch (error) {
@@ -216,7 +218,7 @@ export default function Chat() {
                     </div>
                 </div>
             )}
-            <div className="flex-1 overflow-auto p-4 w-1/2">
+            {/* <div className="flex-1 overflow-auto p-4 w-1/2">
                 {messages.map((message) => (
                     <div
                         key={message.id}
@@ -235,6 +237,54 @@ export default function Chat() {
                                 {message.text}
                             </Markdown>
                         </div>
+                    </div>
+                ))}
+            </div> */}
+            <div className="flex-1 overflow-auto p-4 w-1/2">
+                {messages.map((message) => (
+                    <div
+                        key={message.id}
+                        className={`flex mt-11 my-2 rounded-xl mb-7 items-start ${
+                            message.sender === 'user' ? 'justify-end' : 'justify-start'
+                        } w-full`}>
+                        {message.sender !== 'user' && (
+                            <div className="w-10 h-10 rounded-full flex-shrink-0 mr-2 relative">
+                                <Image
+                                    src={botImg}
+                                    alt="Bot Avatar"
+                                    layout="fill"
+                                    objectFit="cover"
+                                    className="rounded-full"
+                                />
+                            </div>
+                        )}
+                        <div
+                            className={`flex flex-col ${
+                                message.sender === 'user' ? 'items-end' : 'items-start'
+                            }`}>
+                            <div
+                                className={`${
+                                    message.sender === 'user'
+                                        ? 'text-popup border border-gray-500 rounded-xl px-4 py-3'
+                                        : 'bg-zinc-800 text-white px-4 py-3 rounded-xl w-[90%]'
+                                } inline-block`}>
+                                {/* Assuming Markdown component is correctly configured */}
+                                <Markdown remarkPlugins={[remarkGfm]}>
+                                    {message.text}
+                                </Markdown>
+                            </div>
+                        </div>
+                        {message.sender === 'user' && (
+                            <div className="w-10 h-10 rounded-full flex-shrink-0 ml-2 relative">
+                                <Image
+                                    src={userImg}
+                                    alt="User Avatar"
+                                    layout="fill"
+                                    objectFit="cover"
+                                    className="rounded-full"
+                                />
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>
