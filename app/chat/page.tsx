@@ -3,7 +3,7 @@
 import React from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm'; // if you need support for GitHub Flavored Markdown
-
+import Spinner from '@/components/spinner';
 import Image from 'next/image';
 import botImg from '@/./public/bot.jpg';
 import userImg from '@/./public/user.jpg';
@@ -189,7 +189,7 @@ export default function Chat() {
     };
 
     return (
-        <div className="h-[50rem] flex flex-col justify-center items-center px-4">
+        <div className="h-[38rem] flex flex-col justify-center items-center px-4">
             <div className="w-full flex justify-end pt-6 pe-6">
                 <Link href="/">
                     <button
@@ -248,7 +248,6 @@ export default function Chat() {
                                         ? 'text-popup border border-gray-500 rounded-xl px-4 py-3'
                                         : 'bg-zinc-800 text-white px-4 py-3 rounded-xl w-[95%]'
                                 } inline-block`}>
-                                {/* Assuming Markdown component is correctly configured */}
                                 <Markdown remarkPlugins={[remarkGfm]}>
                                     {message.text}
                                 </Markdown>
@@ -267,7 +266,9 @@ export default function Chat() {
                         )}
                     </div>
                 ))}
+                {loading && <Spinner />}
             </div>
+
             <PlaceholdersAndVanishInput
                 placeholders={placeholders}
                 onChange={handleInput}

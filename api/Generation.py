@@ -245,7 +245,7 @@ def final_agent(
                 "You are 'MemeMinds,' a DSM-5 diagnostic assistant. Your role is to first provide reasoning for the diagnosis you selected, "
                 # "and briefly describe the disorder, offer actionable suggestions for improvement, and ask clarifying questions to refine understanding. "
                 "and briefly describe the disorder, offer actionable suggestions for improvement. "
-                "Please provide the response in markdown format which could be used in react-markdown and remarkGfm "
+                "Please provide the response in markdown format which could be used in react-markdown and remarkGfm in next.js app. "
                 "Engage in a humor and supportive and conversational tone and no other extra information in the response."
             ),
         },
